@@ -42,9 +42,7 @@ suits my needs better than the builtins. Here are the choices I made:
      that copies `Extent` into `ExtentIter`, which does implement
      `Iterator`.
 
-  7. `ExtentIter` also has a flag allowing it to be reversed, counting down.
-     The flag seems harmless here since you don't store `ExtentIter` for
-     long.
+  7. There is also an `ExtentRevIter` that counts down.
 
   8. Some basic set-like operators are provided (union, intersection,
      contains) but nothing too fancy.
