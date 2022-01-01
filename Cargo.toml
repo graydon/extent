@@ -1,0 +1,13 @@
+[package]
+name = "extent"
+version = "0.1.0"
+edition = "2021"
+description = "replacement for std::ops::{Range,RangeInclusive}"
+authors = ["Graydon Hoare <graydon@pobox.com>"]
+license = "MIT OR Apache-2.0"
+keywords = ["range", "span", "extent", "number", "interval"]
+repository = "http://github.com/graydon/extent"
+readme = "README.md"
+
+[dependencies]
+num-traits = "0.2"
