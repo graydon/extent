@@ -313,5 +313,14 @@ mod test {
                 }
             }
         }
+
+        let v: Vec<_> = Extent::from(0..=5).iter().collect();
+        assert_eq!(v, vec![0, 1, 2, 3, 4, 5]);
+
+        let rv: Vec<_> = Extent::from(0..=5).iter().rev().collect();
+        assert_eq!(rv, vec![5, 4, 3, 2, 1, 0]);
+
+        let ev: Vec<u32> = Extent::empty().iter().collect();
+        assert_eq!(ev, vec![]);
     }
 }
