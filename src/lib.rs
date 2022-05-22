@@ -132,13 +132,23 @@ impl<N: PrimInt> Extent<N> {
     }
 
     pub fn union<S: Borrow<Self>>(&self, other: S) -> Self {
-        let other = *other.borrow();
-        Self::new(self.lo.min(other.lo), self.hi.max(other.hi))
+        if self.is_empty() {
+            *other.borrow()
+        } else if other.borrow().is_empty() {
+            self.clone()
+        } else {
+            let other = *other.borrow();
+            Self::new(self.lo.min(other.lo), self.hi.max(other.hi))
+        }
     }
 
     pub fn intersect<S: Borrow<Self>>(&self, other: S) -> Self {
-        let other = *other.borrow();
-        Self::new(&self.lo.max(other.lo), &self.hi.min(other.hi))
+        if self.is_empty() || other.borrow().is_empty() {
+            Extent::empty()
+        } else {
+            let other = *other.borrow();
+            Self::new(&self.lo.max(other.lo), &self.hi.min(other.hi))
+        }
     }
 
     pub fn contains<T: Borrow<N>>(&self, n: T) -> bool {
@@ -277,17 +287,25 @@ mod test {
         let bc = Extent::from(b..=c);
         let ac = Extent::from(a..=c);
         let bb = Extent::from(b..=b);
+        let empty: Extent<N> = Extent::empty();
         assert_eq!(ab.union(bc), ac);
         assert_eq!(ab.union(ac), ac);
         assert_eq!(bc.union(ac), ac);
         assert_eq!(ac.union(ab), ac);
         assert_eq!(ac.union(bc), ac);
+
+        assert_eq!(ab.union(empty), ab);
+        assert_eq!(empty.union(ab), ab);
+
         assert_eq!(ab.intersect(bc), bb);
         assert_eq!(ab.intersect(ac), ab);
         assert_eq!(bc.intersect(ac), bc);
         assert_eq!(bb.intersect(ac), bb);
         assert_eq!(bb.intersect(ab), bb);
         assert_eq!(bb.intersect(bc), bb);
+
+        assert_eq!(ab.intersect(empty), empty);
+        assert_eq!(empty.intersect(ab), empty);
     }
 
     #[test]
