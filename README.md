@@ -29,8 +29,8 @@ suits my needs better than the builtins. Here are the choices I made:
      `lo_unchecked()` or `hi_unchecked()`, which are marked unsafe as they
      do not reflect the significant `lo <= hi` invariant.
 
-  4. All nonempty cases have `lo <= hi` enforced in `new`. If you pass `hi >
-     lo` to `new`, the values are swapped (i.e. you can construct from
+  4. All nonempty cases have `lo <= hi` enforced in `new`. If you pass `lo >
+     hi` to `new`, the values are swapped (i.e. you can construct from
      either order of points; they get stored in order). If you are
      constructing from raw IO values you can do `new_unchecked` which will
      not swap, only normalize unordered ranges to `empty()`, and is also
