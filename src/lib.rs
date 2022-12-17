@@ -93,11 +93,29 @@ impl<N: PrimInt> Extent<N> {
         self.hi
     }
 
-    pub fn len(&self) -> N {
+    /// Returns the number of values included in this extent, as a usize, if the
+    /// elements of the extent _and_ the quantity of values between them,
+    /// inclusively, can all be represented exactly as a usize. Various
+    /// conditions may make this impossible: if the extent uses a numeric type
+    /// larger than a usize, for example, or even if it includes the entire
+    /// range of possible usize values (the quantity of which are a number one
+    /// greater than the largest representable usize). This function also
+    /// returns None for any extents involving negatve values of signed types
+    /// (some such cases could still be represented as usize _differences_ from
+    /// lo-to-hi, but it is fussy to get the cases all right and this is not the
+    /// main use-case for this library).
+    pub fn len(&self) -> Option<usize> {
         if self.is_empty() {
-            N::zero()
+            Some(0)
+        } else if let (Some(lo), Some(hi)) = (self.lo.to_usize(), self.hi.to_usize()) {
+            let exclusive_range: usize = hi - lo;
+            if exclusive_range < usize::MAX {
+                Some(exclusive_range + 1)
+            } else {
+                None
+            }
         } else {
-            N::one() + (self.hi - self.lo)
+            None
         }
     }
 
@@ -340,5 +358,31 @@ mod test {
 
         let ev: Vec<u32> = Extent::empty().iter().collect();
         assert_eq!(ev, vec![]);
+    }
+
+    #[test]
+    fn test_len() {
+        let e: Extent<u16> = Extent::empty();
+        assert_eq!(e.len(), Some(0));
+        let e: Extent<u16> = Extent::new(5, 5);
+        assert_eq!(e.len(), Some(1));
+        let e: Extent<u16> = Extent::new(1, 0xffff);
+        assert_eq!(e.len(), Some(0xffff));
+        let e: Extent<u16> = Extent::new(0, 0xffff);
+        assert_eq!(e.len(), Some(0x10000));
+        let e: Extent<u64> = Extent::new(0, 0xffffff);
+        assert_eq!(e.len(), Some(0x1000000));
+        let e: Extent<usize> = Extent::new(usize::MIN, usize::MAX);
+        assert_eq!(e.len(), None);
+        let e: Extent<usize> = Extent::new(usize::MIN, usize::MAX-1);
+        assert_eq!(e.len(), Some(usize::MAX));
+        let e: Extent<usize> = Extent::new(usize::MIN+1, usize::MAX);
+        assert_eq!(e.len(), Some(usize::MAX));
+        let e: Extent<isize> = Extent::new(isize::MIN, isize::MAX);
+        assert_eq!(e.len(), None);
+        let e: Extent<isize> = Extent::new(0, 0);
+        assert_eq!(e.len(), Some(1));
+        let e: Extent<isize> = Extent::new(-1, 1);
+        assert_eq!(e.len(), None);
     }
 }
