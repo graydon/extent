@@ -197,6 +197,15 @@ impl<N: PrimInt> Extent<N> {
     }
 }
 
+impl<N: PrimInt> IntoIterator for Extent<N> {
+    type Item = N;
+    type IntoIter = ExtentIter<N>;
+    
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct ExtentIter<N: PrimInt>(Extent<N>);
 
