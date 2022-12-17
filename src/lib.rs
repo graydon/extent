@@ -119,6 +119,24 @@ impl<N: PrimInt> Extent<N> {
         }
     }
 
+    /// Same as len() but targeting u64 rather than usize. Depending on
+    /// use-case, some contexts prefer measuring extents against a
+    /// definite-sized type.
+    pub fn len_u64(&self) -> Option<u64> {
+        if self.is_empty() {
+            Some(0)
+        } else if let (Some(lo), Some(hi)) = (self.lo.to_u64(), self.hi.to_u64()) {
+            let exclusive_range: u64 = hi - lo;
+            if exclusive_range < u64::MAX {
+                Some(exclusive_range + 1)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn empty() -> Self {
         Self {
             lo: N::one(),
@@ -364,19 +382,24 @@ mod test {
     fn test_len() {
         let e: Extent<u16> = Extent::empty();
         assert_eq!(e.len(), Some(0));
+        assert_eq!(e.len_u64(), Some(0));
         let e: Extent<u16> = Extent::new(5, 5);
         assert_eq!(e.len(), Some(1));
+        assert_eq!(e.len_u64(), Some(1));
         let e: Extent<u16> = Extent::new(1, 0xffff);
         assert_eq!(e.len(), Some(0xffff));
+        assert_eq!(e.len_u64(), Some(0xffff));
         let e: Extent<u16> = Extent::new(0, 0xffff);
         assert_eq!(e.len(), Some(0x10000));
+        assert_eq!(e.len_u64(), Some(0x10000));
         let e: Extent<u64> = Extent::new(0, 0xffffff);
         assert_eq!(e.len(), Some(0x1000000));
+        assert_eq!(e.len_u64(), Some(0x1000000));
         let e: Extent<usize> = Extent::new(usize::MIN, usize::MAX);
         assert_eq!(e.len(), None);
-        let e: Extent<usize> = Extent::new(usize::MIN, usize::MAX-1);
+        let e: Extent<usize> = Extent::new(usize::MIN, usize::MAX - 1);
         assert_eq!(e.len(), Some(usize::MAX));
-        let e: Extent<usize> = Extent::new(usize::MIN+1, usize::MAX);
+        let e: Extent<usize> = Extent::new(usize::MIN + 1, usize::MAX);
         assert_eq!(e.len(), Some(usize::MAX));
         let e: Extent<isize> = Extent::new(isize::MIN, isize::MAX);
         assert_eq!(e.len(), None);
@@ -384,5 +407,9 @@ mod test {
         assert_eq!(e.len(), Some(1));
         let e: Extent<isize> = Extent::new(-1, 1);
         assert_eq!(e.len(), None);
+        let e: Extent<u64> = Extent::new(u64::MIN, u64::MAX);
+        assert_eq!(e.len(), None);
+        let e: Extent<u64> = Extent::new(u64::MIN, u64::MAX - 1);
+        assert_eq!(e.len_u64(), Some(u64::MAX));
     }
 }
